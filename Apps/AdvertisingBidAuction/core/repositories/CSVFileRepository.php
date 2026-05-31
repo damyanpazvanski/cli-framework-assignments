@@ -2,23 +2,10 @@
 
 namespace Apps\AdvertisingBidAuction\Core\Repositories;
 
-use Common\Repositories\LocalFileRepository;
-use Common\Interfaces\IDataStreamAdapter;
+use CommonF\Repositories\LocalFileRepository;
 
 class CSVFileRepository extends LocalFileRepository
 {
-    public function readAll(): array {
-        $data = [];
-        
-        rewind($this->fileStream->getStream());
-
-        while (($row = fgetcsv($this->fileStream->getStream(), 1000, ",")) !== false) {
-            $data[] = $row;
-        }
-
-        return $data;
-    }
-
     public function getHeadersWithIndicesDict(): array {
         $headersWithIndices = [];
         $headers = $this->fileStream->getHeaders();
@@ -32,4 +19,13 @@ class CSVFileRepository extends LocalFileRepository
         return $headersWithIndices;
     }
 
+    public function getRows(): \Generator {
+        rewind($this->fileStream->getStream());
+
+        fgets($this->fileStream->getStream());  // Skip Headers
+
+        while (($row = fgetcsv($this->fileStream->getStream())) !== false) {
+            yield $row;
+        }
+    }
 }

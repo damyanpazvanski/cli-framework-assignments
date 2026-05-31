@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . './../../../Common/autoloader.php';
+require_once __DIR__ . './../../../CommonF/autoloader.php';
 
 use Apps\AdvertisingBidAuction\Core\App;
 

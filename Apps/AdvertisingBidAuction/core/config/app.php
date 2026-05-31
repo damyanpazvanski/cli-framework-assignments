@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'production' => false
+    'production' => true,    // Exclude too comprehensive errors
 ];

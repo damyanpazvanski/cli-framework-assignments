@@ -2,7 +2,7 @@
 
 namespace Apps\AdvertisingBidAuction\Core\Files;
 
-use Common\Files\FileStream;
+use CommonF\Files\FileStream;
 
 class CsvFile extends FileStream
 {

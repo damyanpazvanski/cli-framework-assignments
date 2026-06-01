@@ -111,4 +111,31 @@ For more information about individual applications and their specific requiremen
 
 &nbsp;
 
-## Integration Testing is loading..
+## Integration Testing is loading...
+
+Every peace of code is well structured and highly decopled for easy testing. Mainly integration testing is required because:
+
+- **Design Patterns**: All the design patterns that are used help us to speed up the testing. Small peaces do not even required tests.
+- **SOLID Principals**: SOLID helps with the understanding of the well structured code
+
+&nbsp;
+
+### Requirements
+
+- **PHP Version**: 7.4 or higher
+- **"phpunit/phpunit"**: "^9.6"
+
+&nbsp;
+
+## Project Structure
+```
+Apps/
+  └ {App Name}/
+     └─── tests/
+```
+
+## Running the Application
+```
+composer install
+composer test
+```

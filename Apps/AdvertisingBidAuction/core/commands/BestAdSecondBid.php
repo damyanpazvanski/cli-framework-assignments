@@ -25,6 +25,7 @@ class BestAdSecondBid extends CommandAbstract
         '--print-warnings' => false,
     ];
 
+    protected \NumberFormatter $numberFormatter;
     protected CSVFileRepository $CSVFileRepository;
     protected SimpleLogger $simpleLogger;
     protected string $filePath;
@@ -35,6 +36,7 @@ class BestAdSecondBid extends CommandAbstract
         $this->simpleLogger = $simpleLogger;
         $this->filePath = file_exists($options[0]) ? $options[0] : __DIR__ . '/../../public/' . $options[0];
         $this->FLAGS = $this->prepareFlags($flags, $this->FLAGS);
+        $this->numberFormatter = new \NumberFormatter('en_US', \NumberFormatter::DECIMAL);
     }
 
     public function execute(): void {
@@ -43,6 +45,9 @@ class BestAdSecondBid extends CommandAbstract
 		try {
             $this->CSVFileRepository->loadStream($this->filePath, 'rb');
             $this->CSVValidator = $this->getValidator(CSVValidator::class);
+
+            $this->numberFormatter->setAttribute(\NumberFormatter::MIN_FRACTION_DIGITS, 0);
+            $this->numberFormatter->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, $this->CSVValidator->getOptionsDecimalDigits());
 
             $csv = $this->CSVFileRepository->getFileStream();
 
@@ -99,6 +104,6 @@ class BestAdSecondBid extends CommandAbstract
         if ($this->canPrintWarnings()) $this->printMsgsArr($warnings);
 
         // Success Message
-        $this->simpleLogger->success($bestBids['first']->id . ', ' . $bestBids['second']->bid);
+        $this->simpleLogger->success($bestBids['first']->id . ', ' . $this->numberFormatter->format($bestBids['second']->bid));
     }
 }

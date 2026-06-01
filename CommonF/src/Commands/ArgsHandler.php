@@ -33,6 +33,8 @@ class ArgsHandler implements IGlobalHandler
             throw new \Exception('Too much command arguments!');
         }
 
+        self::$options = [];
+        self::$flags = [];
         foreach(self::$allValues as $val) {
             if (substr($val, 0, 2) === '--') {
                 self::$flags[] = $val;
@@ -48,6 +50,10 @@ class ArgsHandler implements IGlobalHandler
 
     public static function getArgs(): array {
         return array_slice(self::$options, 1);
+    }
+
+    public static function getConnectedArgs(): array {
+        return [ implode('', array_slice(self::$options, 1)) ];
     }
 
     public static function getFlags(): array {

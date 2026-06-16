@@ -1,5 +1,6 @@
 import { createApp, ref, reactive, onMounted } from 'vue';
 import { errorState } from '/assets/js/components/ErrorTooltip.js';
+import { handleApiRequest } from '/assets/js/components/APIRequest.js';
 
 export default {
   setup() {
@@ -16,7 +17,7 @@ export default {
      * { text: string, type: info, success, error }
      */
     const displayLogs = ref([]);
-    
+
     const addNewLog = (text, type = 'info', limit = 3) => {
       // Add new item to the very beginning of the array
       // displayLogs.value.unshift({ text, type });
@@ -25,217 +26,197 @@ export default {
       displayLogs.value = displayLogs.value.slice(-limit);
     };
 
-    const fetchVendingData = async () => {
-      try {
-        const response = await fetch('/api/vending-machine');
-
-        if(!response.ok) throw new Error('API server unreachable');
-
-        const data = await response.json();
-
-        drinks.value = data.products;
-        coins.value = data.coins;
-      } catch (err) {
-        errorState.trigger('Initialization error: Could not fetch layout objects.');
-      }
-    };
-
-    const putCoin = async () => {
-      try {
-        const formData = new FormData();
-
-        formData.append('coin', addedCoin.value.price);
-        formData.append('fullAmount', addedMoneyAmount.value.price);
-
-        const response = await fetch('/api/vending-machine/put-coin', { method: 'POST', body: formData });
-
-        if(!response.ok) throw new Error('API server unreachable');
-
-        const data = await response.json();
-
-        if (!data.success) { addNewLog(data.msg, 'error'); return; }
-
-        addedMoneyAmount.value = { price: addedMoneyAmount.value.price + addedCoin.value.price };
-        addedCoin.value = { name: '', price: null };   // Reset
-
-        addNewLog(data.msg, 'success');
-      } catch (err) {
-        errorState.trigger('API Mutation Error: Failed to add new drink item.');
-      }
-    };
-
-    const getChange = async () => {
-      try {
-        const formData = new FormData();
-
-        formData.append('fullAmount', addedMoneyAmount.value.price);
-
-        const response = await fetch('/api/vending-machine/get-change', { method: 'POST', body: formData });
-
-        if(!response.ok) throw new Error('API server unreachable');
-
-        const data = await response.json();
-
-        if (!data.success) { addNewLog(data.msg, 'error'); return; }
-
-        addedMoneyAmount.value = { price: 0 };
-
-        addNewLog(data.msg, 'success');
-      } catch (err) {
-        errorState.trigger('API Mutation Error: Failed to add new drink item.');
-      }
-    };
-
-    const viewFullAmount = async () => {
-      try {
-        const formData = new FormData();
-
-        formData.append('fullAmount', addedMoneyAmount.value.price);
-
-        const response = await fetch('/api/vending-machine/view-amount', { method: 'POST', body: formData });
-
-        if(!response.ok) throw new Error('API server unreachable');
-
-        const data = await response.json();
-
-        if (!data.success) { addNewLog(data.msg, 'error'); return; }
-
-        addNewLog(data.msg, 'success');
-      } catch (err) {
-        errorState.trigger('API Mutation Error: Failed to add new drink item.');
-      }
-    };
-
-    const buyDrink = async (id) => {
-      try {
-        const formData = new FormData();
-        const drink = drinks.value.find((d) => d.id == id);
-
-        formData.append('product', drink.name);
-        formData.append('fullAmount', addedMoneyAmount.value.price);
-
-        const response = await fetch('/api/vending-machine/buy-product', { method: 'POST', body: formData });
-
-        if(!response.ok) throw new Error('API server unreachable');
-
-        const data = await response.json();
-
-        if (!data.success) { addNewLog(data.msg, 'error'); return; }
-
-        addedMoneyAmount.value = { price: addedMoneyAmount.value.price - drink.price };
-
-        addNewLog(data.msg, 'success');
-      } catch (err) {
-        errorState.trigger('API Mutation Error: Failed to add new drink item.');
-      }
-    };
-    
     const resetVM = () => {
       addedMoneyAmount.value = { price: 0 };
       addedCoin.value = { price: null };
       displayLogs.value = [];
     };
+
+    const fetchVendingData = async () => {
+      await handleApiRequest({
+        endpoint: '/api/vending-machine',
+        method: 'GET',
+        onSuccess: (data) => {
+          drinks.value = data.products;
+          coins.value = data.coins;
+        },
+        onError: (err) => {
+          errorState.trigger(err);
+        },
+      });
+    };
+
+    const putCoin = async () => {
+      await handleApiRequest({
+        endpoint: '/api/vending-machine/put-coin',
+        method: 'POST',
+        payload: {
+          'coin': addedCoin.value.price,
+          'fullAmount': addedMoneyAmount.value.price,
+        },
+        onSuccess: (data) => {
+          if (!data.success) { addNewLog(data.msg, 'error'); return; }
+
+          addedMoneyAmount.value = { price: addedMoneyAmount.value.price + addedCoin.value.price };
+          addedCoin.value = { name: '', price: null };   // Reset
+
+          addNewLog(data.msg, 'success');
+        },
+        onError: (err) => {
+          errorState.trigger(err);
+        },
+      });
+    };
+
+    const getChange = async () => {
+      await handleApiRequest({
+        endpoint: '/api/vending-machine/get-change',
+        method: 'POST',
+        payload: {
+          'fullAmount': addedMoneyAmount.value.price
+        },
+        onSuccess: (data) => {
+          if (!data.success) { addNewLog(data.msg, 'error'); return; }
+
+          addedMoneyAmount.value = { price: 0 };
+
+          addNewLog(data.msg, 'success');
+        },
+        onError: (err) => {
+          errorState.trigger(err);
+        },
+      });
+    };
+
+    const viewFullAmount = async () => {
+      await handleApiRequest({
+        endpoint: '/api/vending-machine/view-amount',
+        method: 'POST',
+        payload: {
+          'fullAmount': addedMoneyAmount.value.price
+        },
+        onSuccess: (data) => {
+          if (!data.success) { addNewLog(data.msg, 'error'); return; }
+
+          addNewLog(data.msg, 'success');
+        },
+        onError: (err) => {
+          errorState.trigger(err);
+        },
+      });
+    };
+
+    const buyDrink = async (id) => {
+      const drink = drinks.value.find((d) => d.id == id);
+
+      await handleApiRequest({
+        endpoint: '/api/vending-machine/buy-product',
+        method: 'POST',
+        payload: {
+          'product': drink.name,
+          'fullAmount': addedMoneyAmount.value.price,
+        },
+        onSuccess: (data) => {
+          if (!data.success) { addNewLog(data.msg, 'error'); return; }
+
+          addedMoneyAmount.value = { price: addedMoneyAmount.value.price - drink.price };
+
+          addNewLog(data.msg, 'success');
+        },
+        onError: (err) => {
+          errorState.trigger(err);
+        },
+      });
+    };
     
     const addDrink = async () => {
-      try {
-        const formData = new FormData();
+      await handleApiRequest({
+        endpoint: '/api/vending-machine/products',
+        method: 'POST',
+        payload: {
+          'name': newDrink.value.name,
+          'price': newDrink.value.price,
+        },
+        onSuccess: (data) => {
+          if (!data.success) { addNewLog(data.msg, 'error'); return; }
 
-        formData.append('name', newDrink.value.name);
-        formData.append('price', newDrink.value.price);
+          drinks.value.push({ id: data.data.id, name: data.data.name, price: data.data.price, priceLbl: data.data.priceLbl });
+          newDrink.value = { name: '', price: null };   // Reset
 
-        const response = await fetch('/api/vending-machine/products', { method: 'POST', body: formData });
-
-        if(!response.ok) throw new Error('API server unreachable');
-
-        const data = await response.json();
-
-        if (!data.success) { addNewLog(data.msg, 'error'); return; }
-
-        drinks.value.push({ id: data.data.id, name: data.data.name, price: data.data.price, priceLbl: data.data.priceLbl });
-        newDrink.value = { name: '', price: null };   // Reset
-
-        addNewLog(data.msg, 'success');
-      } catch (err) {
-        errorState.trigger('API Mutation Error: Failed to add new drink item.');
-      }
+          addNewLog(data.msg, 'success');
+        },
+        onError: (err) => {
+          errorState.trigger(err);
+        },
+      });
     };
 
     const deleteDrink = async (id) => {
-      try {
-        const formData = new FormData();
+      await handleApiRequest({
+        endpoint: '/api/vending-machine/products/delete',
+        method: 'POST',
+        payload: {
+          'productId': id,
+        },
+        onSuccess: (data) => {
+          if (!data.success) { addNewLog(data.msg, 'error'); return; }
 
-        formData.append('productId', id);
+          drinks.value = drinks.value.filter(d => d.id !== id);
 
-        const response = await fetch('/api/vending-machine/products/delete', { method: 'POST', body: formData });
-
-        if(!response.ok) throw new Error('API server unreachable');
-
-        const data = await response.json();
-
-        if (!data.success) { addNewLog(data.msg, 'error'); return; }
-
-        drinks.value = drinks.value.filter(d => d.id !== id);
-
-        addNewLog(data.msg, 'success');
-      } catch (err) {
-        errorState.trigger('API Network Error: Could not delete selected drink configuration.');
-      }
+          addNewLog(data.msg, 'success');
+        },
+        onError: (err) => {
+          errorState.trigger(err);
+        },
+      });
     };
 
     const addCoin = async () => {
-      try {
-        const formData = new FormData();
+      await handleApiRequest({
+        endpoint: '/api/vending-machine/coins',
+        method: 'POST',
+        payload: {
+          'price': newCoin.value.price,
+        },
+        onSuccess: (data) => {
+          if (!data.success) { addNewLog(data.msg, 'error'); return; }
 
-        formData.append('price', newCoin.value.price);
+          coins.value.push({ id: data.data.id, price: data.data.price, priceLbl: data.data.priceLbl });
+          newCoin.value = { price: null };    // Reset
 
-        const response = await fetch('/api/vending-machine/coins', { method: 'POST', body: formData });
-
-        if(!response.ok) throw new Error('API server unreachable');
-
-        const data = await response.json();
-
-        if (!data.success) { addNewLog(data.msg, 'error'); return; }
-
-        coins.value.push({ id: data.data.id, price: data.data.price, priceLbl: data.data.priceLbl });
-        newCoin.value = { price: null };    // Reset
-
-        addNewLog(data.msg, 'success');
-      } catch (err) {
-        errorState.trigger('API Mutation Error: Failed to accept coin matrix modification.');
-      }
+          addNewLog(data.msg, 'success');
+        },
+        onError: (err) => {
+          errorState.trigger(err);
+        },
+      });
     };
     
     const deleteCoin = async (id) => {
-      try {
-        const formData = new FormData();
+      await handleApiRequest({
+        endpoint: '/api/vending-machine/coins/delete',
+        method: 'POST',
+        payload: {
+          'coinId': id,
+        },
+        onSuccess: (data) => {
+          if (!data.success) { addNewLog(data.msg, 'error'); return; }
 
-        formData.append('coinId', id);
+          coins.value = coins.value.filter(c => c.id !== id);
 
-        const response = await fetch('/api/vending-machine/coins/delete', { method: 'POST', body: formData });
-
-        if(!response.ok) throw new Error('API server unreachable');
-
-        const data = await response.json();
-
-        if (!data.success) { addNewLog(data.msg, 'error'); return; }
-
-        coins.value = coins.value.filter(c => c.id !== id);
-
-        addNewLog(data.msg, 'success');
-      } catch (err) {
-        errorState.trigger('API Network Error: target coin entity removal failed.');
-      }
-    };
-
-    const returnChange = () => {
-      addNewLog('Изплащане на ресто...');
+          addNewLog(data.msg, 'success');
+        },
+        onError: (err) => {
+          errorState.trigger(err);
+        },
+      });
     };
 
     onMounted(() => { fetchVendingData(); });
 
     return {
       displayLogs, drinks, coins, newDrink, newCoin, addedCoin,
-      putCoin, getChange, viewFullAmount, buyDrink, resetVM, addDrink, deleteDrink, addCoin, deleteCoin, returnChange
+      putCoin, getChange, viewFullAmount, buyDrink, resetVM, addDrink, deleteDrink, addCoin, deleteCoin
     };
   },
   template: `

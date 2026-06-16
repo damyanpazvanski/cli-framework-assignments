@@ -46,8 +46,8 @@ abstract class CoreAppAbstract
                     continue;
                 }
 
+                $dependencies[] = $nestedArr;
                 continue; // Bottom
-                // return $deps;  // Bottom
             }
 
             $btmArgs = $this->resolveNested($class, is_array($deps) ? $deps : [$deps], $args);

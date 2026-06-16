@@ -70,11 +70,7 @@ class CoreHTTPApp extends CoreAppAbstract
 
     protected function findRouteKey($path, $method = 'GET') {
         $path = preg_split('/[\/]/', $path);
-        $uri = $path[1];
-
-        if (isset($path[2])) {
-            $uri .= '/' . $path[2];
-        }
+        $uri = implode('/', $path);
 
         $uri = explode('?', $uri);
         $prefix = substr($uri[0], 0, 1);
@@ -84,7 +80,7 @@ class CoreHTTPApp extends CoreAppAbstract
         }
 
         foreach ($this->routes as $key => $route) {
-            if ($key !== 'otherwise' && $uri[0] == $key && strtolower($method) == strtolower($route['options']['method'])) {
+            if ($key !== 'otherwise' && ($uri[0] == $key || $uri[0] == $key) && strtolower($method) == strtolower($route['options']['method'])) {
                 return $key;
             }
         }

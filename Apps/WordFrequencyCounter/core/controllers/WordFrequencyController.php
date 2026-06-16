@@ -127,7 +127,6 @@ class WordFrequencyController extends ControllerAbstract
                 break;
             }
 
-            $totalBytesRead += $chunkBytesRead;
             if ($lastSpaceIndex > 0) {    // The chunk starts with a space
                 $parts = str_split($chunk, $lastSpaceIndex);
                 $carryOver = $parts[1];

@@ -17,9 +17,13 @@ Apps/
   ├──EscapeALabyrinth/
   │  ├── public/
   │  └────── index.php       # entry point
-  └──WordFrequencyCounter/
+  ├──WordFrequencyCounter/
+  │  ├── public/
+  │  ├────── migrations.php  # migrations entry point
+  │  └────── index.php       # http entry point
+  └──VendingMachine/
      ├── public/
-     ├────── migrations.php  # migrations entry point
+     ├────── commands.php    # commands entry point
      └────── index.php       # http entry point
 ```
 
@@ -96,6 +100,7 @@ Below are the applications included in this assignment repository:
 - **[AdvertisingBidAuction](/Apps/AdvertisingBidAuction)** - Advertising Bid Auction application
 - **[EscapeALabyrinth](/Apps/EscapeALabyrinth)** - Escape A Labyrinth application
 - **[WordFrequencyCounter](/Apps/WordFrequencyCounter)** - Word Frequency Counter application
+- **[VendingMachine](/Apps/VendingMachine)** - 3 Levels of Vending Machine application
 
 *Each application directory contains its own README.md with specific instructions.*
 

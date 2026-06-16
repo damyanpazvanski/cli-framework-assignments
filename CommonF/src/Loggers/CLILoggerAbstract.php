@@ -11,7 +11,6 @@ abstract class CLILoggerAbstract implements ILoggerAdapter
         $reset = "\033[0m";
 
         echo "{$color}[{$label}]{$reset} {$msg}" . PHP_EOL;
-        // fwrite(STDERR, "{$color}[{$label}]{$reset} {$msg}" . PHP_EOL);
     }
 
     public function success(string $msg, string $label = 'SUCCESS') {
